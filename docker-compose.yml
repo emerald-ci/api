@@ -1,0 +1,27 @@
+rabbitmq:
+  image: rabbitmq:management
+  ports:
+    - 15672:15672
+    - 5672:5672
+  environment:
+    - RABBITMQ_DEFAULT_USER=emeraldci
+    - RABBITMQ_DEFAULT_PASS=secure
+    - RABBITMQ_DEFAULT_VHOST=emeraldci
+fluentd:
+  image: emeraldci/fluentd
+  ports:
+    - 24224:24224
+  links:
+    - rabbitmq:rabbitmq
+web:
+  build: .
+  volumes:
+    - .:/usr/src/app
+  ports:
+    - 8080:5000
+  links:
+    - rabbitmq:rabbitmq
+  environment:
+    - SESSION_SECRET=supersavesecret
+    - RABBITMQ_URL=amqp://emeraldci:secure@rabbitmq/emeraldci
+
