@@ -1,6 +1,3 @@
-require 'sidekiq/testing'
-Sidekiq::Testing.fake!
-
 require 'emerald/api/workers/job_worker'
 
 RSpec.describe do
@@ -12,13 +9,25 @@ RSpec.describe do
 
   describe '[POST] /projects/:id/builds/trigger/github' do
     it 'enqueues a job to execute the build' do
+      webhook_payload = {
+        head_commit: {
+          id: 'sha123',
+          message: 'Test message'
+        }
+      }.to_json
+
       expect {
-        post "/projects/#{@project.id}/builds/trigger/github", {}.to_json, 'CONTENT_TYPE' => 'application/json'
+        post "/api/v1/projects/#{@project.id}/builds/trigger/github", webhook_payload, 'CONTENT_TYPE' => 'application/json'
       }.to change { JobWorker.jobs.size }.by(1)
 
-      expect(last_response.body).to eq ({
-        message: 'Job has been enqueued.'
-      }.to_json)
+      job = Job.last
+      expect(json_response).to eq ({
+        id: job.id,
+        build_id: job.build.id,
+        state: 'not_running',
+        started_at: nil,
+        finished_at: nil
+      })
     end
   end
 end

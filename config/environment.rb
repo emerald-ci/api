@@ -1,6 +1,4 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-require 'active_record'
-ActiveRecord::Base.include_root_in_json = true
 ENV['GITHUB_VERIFIER_SECRET'] = ENV['SESSION_SECRET']
 ENV['WARDEN_GITHUB_VERIFIER_SECRET'] = ENV['SESSION_SECRET']
 require 'sidekiq'

@@ -26,7 +26,7 @@ class JobWorker
 
   def create_container(job)
     Docker::Container.create(
-      'Cmd' => [job.build.project.git_url],
+      'Cmd' => [job.build.project.git_url, job.build.commit],
       'Image' => 'emeraldci/environment',
       'Tty' => true,
       'OpenStdin' => true,

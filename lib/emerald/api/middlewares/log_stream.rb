@@ -8,7 +8,7 @@ module Emerald
   module API
     class LogStream
       KEEPALIVE_TIME = 15 # in seconds
-      ROUTE_REGEX = /\/jobs\/(\d)\/subscribe/
+      ROUTE_REGEX = /\/api\/v1\/jobs\/(\d)\/logs/
       COLOR = {
          '1' => 'bold',
         '30' => 'black',

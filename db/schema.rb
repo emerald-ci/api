@@ -18,6 +18,8 @@ ActiveRecord::Schema.define(version: 20150917115213) do
 
   create_table "builds", force: :cascade do |t|
     t.integer "project_id"
+    t.string  "commit"
+    t.text    "description"
   end
 
   create_table "jobs", force: :cascade do |t|
@@ -28,7 +30,10 @@ ActiveRecord::Schema.define(version: 20150917115213) do
   end
 
   create_table "projects", force: :cascade do |t|
-    t.string "git_url", null: false
+    t.string  "type",           null: false
+    t.string  "name",           null: false
+    t.string  "git_url",        null: false
+    t.integer "github_repo_id"
   end
 
 end

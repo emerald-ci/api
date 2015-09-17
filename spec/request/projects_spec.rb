@@ -8,38 +8,37 @@ RSpec.describe do
     it 'returns a list of projects' do
       project = FactoryGirl.create(:project)
 
-      get '/projects', 'CONTENT_TYPE' => 'application/json'
+      get '/api/v1/projects', 'CONTENT_TYPE' => 'application/json'
 
-      expect(last_response.body).to eq ([
+      expect(json_response).to eq ([
         {
-          project: {
-            id: project.id,
-            git_url: 'https://github.com/emerald-ci/ruby-example'
-          }
+          id: project.id,
+          name: 'test',
+          type: 'PlainProject',
+          git_url: 'https://github.com/emerald-ci/ruby-example'
         }
-      ].to_json)
+      ])
     end
   end
 
   describe '[POST] /projects' do
     it 'returns a list of projects' do
       project_json = {
-        project: {
-          git_url: 'https://github.com/emerald-ci/ruby-example'
-        }
+        name: 'test',
+        git_url: 'https://github.com/emerald-ci/ruby-example'
       }.to_json
 
       expect {
-        post '/projects', project_json, 'CONTENT_TYPE' => 'application/json'
+        post '/api/v1/projects', project_json, 'CONTENT_TYPE' => 'application/json'
       }.to change{ Project.count }.by(1)
 
       project = Project.last
-      expect(last_response.body).to eq ({
-        project: {
-          id: project.id,
-          git_url: 'https://github.com/emerald-ci/ruby-example'
-        }
-      }.to_json)
+      expect(json_response).to eq ({
+        id: project.id,
+        name: 'test',
+        type: 'PlainProject',
+        git_url: 'https://github.com/emerald-ci/ruby-example'
+      })
     end
   end
 
@@ -48,14 +47,14 @@ RSpec.describe do
       it 'returns a single project' do
         project = FactoryGirl.create(:project)
 
-        get "/projects/#{project.id}", 'CONTENT_TYPE' => 'application/json'
+        get "/api/v1/projects/#{project.id}", 'CONTENT_TYPE' => 'application/json'
 
-        expect(last_response.body).to eq ({
-          project: {
-            id: project.id,
-            git_url: 'https://github.com/emerald-ci/ruby-example'
-          }
-        }.to_json)
+        expect(json_response).to eq ({
+          id: project.id,
+          name: 'test',
+          type: 'PlainProject',
+          git_url: 'https://github.com/emerald-ci/ruby-example'
+        })
       end
     end
   end
