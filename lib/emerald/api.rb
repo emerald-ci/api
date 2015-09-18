@@ -76,9 +76,9 @@ module Emerald
 
       get '/api/v1/github/repos' do
         authenticate!
-        repos = github_user.api.repositories
-        repos += github_user.api.organizations.map do |org|
-          github_user.api.organization_repositories(org.login)
+        repos = github_user.api.repositories(github_user.login)
+        github_user.api.organizations.each do |org|
+          repos += github_user.api.organization_repositories(org.login)
         end
         repos.map do |repo|
           { id: repo.id, full_name: repo.full_name }
