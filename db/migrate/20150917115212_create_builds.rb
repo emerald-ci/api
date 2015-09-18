@@ -3,6 +3,7 @@ class CreateBuilds < ActiveRecord::Migration
     create_table :builds do |t|
       t.belongs_to :project
       t.string :commit
+      t.string :short_description
       t.text :description
     end
   end

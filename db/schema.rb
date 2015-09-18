@@ -19,6 +19,7 @@ ActiveRecord::Schema.define(version: 20150917115213) do
   create_table "builds", force: :cascade do |t|
     t.integer "project_id"
     t.string  "commit"
+    t.string  "short_description"
     t.text    "description"
   end
 

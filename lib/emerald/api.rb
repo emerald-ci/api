@@ -22,14 +22,9 @@ module Emerald
         :scopes    => "user, repo, write:repo_hook",
         :secret    => ENV['GITHUB_CLIENT_SECRET'],
         :client_id => ENV['GITHUB_CLIENT_ID'],
+        :callback_url => '/api/v1/auth/github/callback'
       }
 
-      use Rack::Cors do
-        allow do
-          origins '*'
-          resource '*', headers: :any, methods: [:get, :post, :patch, :put, :delete]
-        end
-      end
       register Sinatra::ActiveRecordExtension
       register Sinatra::Auth::Github
       use LogStream
@@ -52,10 +47,37 @@ module Emerald
         end
       end
 
+      get '/api/v1/auth/active' do
+        authenticate!
+        { authenticated: authenticated? }.to_json
+      end
+
+      get '/api/v1/auth/github/callback' do
+        puts params["error"]
+        if params["error"]
+          redirect "/unauthenticated"
+        else
+          session['warden.github.oauth']['return_to'] = '/api/v1/auth/github/after'
+          authenticate!
+          return_to = session.delete('return_to') || _relative_url_for('/')
+          redirect return_to
+        end
+      end
+
+      get '/api/v1/auth/github/after' do
+        authenticate!
+        redirect ENV['FRONTEND_URL']
+      end
+
+      get '/api/v1/profile' do
+        authenticate!
+        github_user.to_h[:attribs].to_json
+      end
+
       get '/api/v1/github/repos' do
         authenticate!
         repos = github_user.api.repositories
-        github_user.api.organizations.each do |org|
+        repos += github_user.api.organizations.map do |org|
           github_user.api.organization_repositories(org.login)
         end
         repos.map do |repo|
@@ -65,7 +87,7 @@ module Emerald
 
       post '/api/v1/github/repos/:id' do |id|
         authenticate!
-        repo = github_user.api.repository(id)
+        repo = github_user.api.repo(id.to_i)
         project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.url)
         serialize_project(project).to_json
       end
