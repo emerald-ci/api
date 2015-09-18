@@ -40,7 +40,9 @@ module Emerald
             q = @ch.queue('', auto_delete: true).bind(@x, routing_key: "job.#{job_id}")
             q.subscribe do |delivery_info, properties, payload|
               payload = JSON.parse(payload)
-              payload['payload']['log'] = ansi2html(payload['payload']['log']) + "\n"
+              log_line = ansi2html(payload['payload']['log']) + "\n"
+              Log.create(content: log_line, job_id: job_id)
+              payload['payload']['log'] = log_line
               ws.send(payload.to_json)
             end
           end
