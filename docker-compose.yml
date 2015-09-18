@@ -36,6 +36,7 @@ docker:
 api:
   build: .
   dockerfile: Dockerfile.dev
+  command: api
   volumes:
     - .:/usr/src/app
   ports:
@@ -56,7 +57,7 @@ api:
 worker:
   build: .
   dockerfile: Dockerfile.dev
-  command: bundle exec sidekiq -r ./lib/emerald/api/workers/job_worker.rb
+  command: worker
   volumes:
     - .:/usr/src/app
   links:
