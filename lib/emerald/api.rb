@@ -88,7 +88,7 @@ module Emerald
       post '/api/v1/github/repos/:id' do |id|
         authenticate!
         repo = github_user.api.repo(id.to_i)
-        project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.url)
+        project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.url.chomp('/'))
         serialize_project(project).to_json
       end
 

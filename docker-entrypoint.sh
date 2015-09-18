@@ -10,5 +10,11 @@ case $1 in
   worker)
     bundle exec sidekiq -r ./lib/emerald/api/workers/job_worker.rb
     ;;
+  migrate)
+    bundle exec rake db:migrate
+    ;;
+  seed)
+    bundle exec rake db:seed
+    ;;
 esac
 
