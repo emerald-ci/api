@@ -10,6 +10,14 @@ class JobWorker
 
   def perform(job_id)
     job = Job.find(job_id)
+
+    # this is async
+    job.log_stream do |delivery_info, properties, payload|
+      payload = JSON.parse(payload)
+      log_line = payload['payload']['log']
+      job.logs.create(content: log_line)
+    end
+
     container = create_container(job)
     job.update(
       state: :running,

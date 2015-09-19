@@ -147,7 +147,7 @@ module Emerald
 
       get '/api/v1/jobs/:job_id/log' do |job_id|
         authenticate!
-        Job.find(job_id).logs.map(&:content).as_json.to_json
+        Job.find(job_id).logs.map(&:html_log_line).as_json.to_json
       end
     end
   end
