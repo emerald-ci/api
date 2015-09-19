@@ -92,7 +92,7 @@ module Emerald
       post '/api/v1/github/repos/:id' do |id|
         authenticate!
         repo = github_user.api.repo(id.to_i)
-        project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.url.chomp('/'))
+        project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.clone_url)
         serialize_project(project).to_json
       end
 
@@ -121,6 +121,16 @@ module Emerald
       get '/api/v1/projects/:project_id/builds' do |project_id|
         authenticate!
         Project.find(project_id).builds.map{|b|serialize_build(b)}.to_json
+      end
+
+      post '/api/v1/projects/:project_id/builds/trigger/manual' do |project_id|
+        authenticate!
+        project = GithubProject.find(project_id)
+        commit = github_user.api.commits(project.name, 'master').first.commit
+        build = project.builds.create!(commit: 'master', description: commit[:message])
+        job = build.jobs.create!(state: :not_running)
+        JobWorker.perform_async(job.id)
+        job.as_json.to_json
       end
 
       post '/api/v1/projects/:project_id/builds/trigger/github' do |project_id|

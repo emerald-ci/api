@@ -34,6 +34,10 @@ class JobWorker
   end
 
   def create_container(job)
+    puts '-------'
+    puts job.build.project.git_url
+    puts job.build.commit
+    puts '-------'
     Docker::Container.create(
       'Cmd' => [job.build.project.git_url, job.build.commit],
       'Image' => 'emeraldci/environment',

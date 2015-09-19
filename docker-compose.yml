@@ -40,7 +40,7 @@ api:
   volumes:
     - .:/usr/src/app
   ports:
-    - 5000
+    - 8080:5000
   links:
     - rabbitmq:rabbitmq
     - db:db
@@ -63,18 +63,13 @@ worker:
   links:
     - db:db
     - redis:redis
+    - rabbitmq:rabbitmq
     - docker:docker
     - fluentd:fluentd
   environment:
     - RACK_ENV=development
     - DATABASE_URL=postgres://emeraldci:secure@db/emeraldci
+    - RABBITMQ_URL=amqp://emeraldci:secure@rabbitmq/emeraldci
     - REDIS_URL=redis://redis
     - DOCKER_URL=tcp://docker:2375
     - FLUENTD_URL=localhost:24224 # this is tricky because it's the actual hosts docker daemon
-haproxy:
-  image: emeraldci/haproxy
-  ports:
-    - 8080:8080
-  links:
-    - api:api
-

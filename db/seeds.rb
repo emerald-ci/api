@@ -5,4 +5,4 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
-PlainProject.create!(name: 'emerald-ci/ruby-example', git_url: 'https://github.com/emerald-ci/ruby-example')
+GithubProject.create!(name: 'emerald-ci/ruby-example', git_url: 'https://github.com/emerald-ci/ruby-example', github_repo_id: 41214989)
