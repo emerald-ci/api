@@ -17,10 +17,12 @@ ActiveRecord::Schema.define(version: 20150917115214) do
   enable_extension "plpgsql"
 
   create_table "builds", force: :cascade do |t|
-    t.integer "project_id"
-    t.string  "commit"
-    t.string  "short_description"
-    t.text    "description"
+    t.integer  "project_id"
+    t.string   "commit"
+    t.string   "short_description"
+    t.text     "description"
+    t.datetime "created_at",        null: false
+    t.datetime "updated_at",        null: false
   end
 
   create_table "jobs", force: :cascade do |t|

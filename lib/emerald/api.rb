@@ -43,7 +43,11 @@ module Emerald
         end
 
         def serialize_project(project)
-          project.as_json(only: [:id, :name, :type, :git_url])
+          project.as_json(only: [:id, :name, :type, :git_url], methods: :latest_build_result)
+        end
+
+        def serialize_build(build)
+          build.as_json(methods: :latest_job_result)
         end
       end
 
@@ -116,7 +120,7 @@ module Emerald
 
       get '/api/v1/projects/:project_id/builds' do |project_id|
         authenticate!
-        Project.find(project_id).builds.as_json.to_json
+        Project.find(project_id).builds.map{|b|serialize_build(b)}.to_json
       end
 
       post '/api/v1/projects/:project_id/builds/trigger/github' do |project_id|
@@ -132,7 +136,7 @@ module Emerald
 
       get '/api/v1/builds/:build_id' do |build_id|
         authenticate!
-        Build.find(build_id).as_json.to_json
+        serialize_build(Build.find(build_id)).to_json
       end
 
       get '/api/v1/builds/:build_id/jobs' do |build_id|
