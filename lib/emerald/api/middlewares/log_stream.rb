@@ -28,10 +28,12 @@ module Emerald
             q = @ch.queue('', auto_delete: true).bind(@x, routing_key: "job.#{job_id}")
             q.subscribe do |delivery_info, properties, payload|
               payload = JSON.parse(payload)
-              log_line = payload['payload']['log'] + "\n"
-              log = Log.new(content: log_line)
-              payload['payload']['log'] = log.html_log_line
-              ws.send(payload.to_json)
+              log_line = payload['payload']['log'].strip
+              if !log_line.empty?
+                log = Log.new(content: log_line)
+                payload['payload']['log'] = log.html_log_line
+                ws.send(payload.to_json)
+              end
             end
           end
 

@@ -16,8 +16,6 @@ class Log < ActiveRecord::Base
 
   belongs_to :job
 
-  validates :content, presence: true
-
   def html_log_line
     out = String.new
     s = StringScanner.new((content + "\n").gsub("<", "&lt;"))

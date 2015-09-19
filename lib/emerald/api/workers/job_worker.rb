@@ -14,19 +14,20 @@ class JobWorker
     # this is async
     job.log_stream do |delivery_info, properties, payload|
       payload = JSON.parse(payload)
-      log_line = payload['payload']['log']
-      job.logs.create(content: log_line)
+      log_line = payload['payload']['log'].strip
+      job.logs.create(content: log_line) if !log_line.empty?
     end
 
     container = create_container(job)
-    job.update(
+    job.update!(
       state: :running,
       started_at: Time.now
     )
     container.start
-    statusCode = container.wait(3600)['StatusCode'] # allow jobs to take up to one hour
+    result = container.wait(3600) # allow jobs to take up to one hour
+    statusCode = result['StatusCode']
     jobState = { 0 => :passed }.fetch(statusCode, :failed)
-    job.update(
+    job.update!(
       state: jobState,
       finished_at: Time.now
     )
