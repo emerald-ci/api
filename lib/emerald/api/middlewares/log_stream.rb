@@ -8,7 +8,7 @@ module Emerald
   module API
     class LogStream
       KEEPALIVE_TIME = 15 # in seconds
-      ROUTE_REGEX = /\/api\/v1\/jobs\/(\d)\/logs/
+      ROUTE_REGEX = /\/api\/v1\/jobs\/(\d+)\/logs/
 
       def initialize(app)
         @app = app
@@ -47,7 +47,6 @@ module Emerald
           @app.call(env)
         end
       end
-
     end
   end
 end
