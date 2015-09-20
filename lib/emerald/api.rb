@@ -124,7 +124,7 @@ module Emerald
         build = project.builds.create!(commit: 'master', description: commit[:message])
         job = build.jobs.create!(state: :not_running)
         JobWorker.perform_async(job.id)
-        job.as_json.to_json
+        job.serialize_json.to_json
       end
 
       post '/api/v1/projects/:project_id/builds/trigger/github' do |project_id|
@@ -135,7 +135,7 @@ module Emerald
         build = project.builds.create!(commit: (commit[:id] || ref || 'master'), description: commit[:message])
         job = build.jobs.create!(state: :not_running)
         JobWorker.perform_async(job.id)
-        job.as_json.to_json
+        job.serialize_json.to_json
       end
 
       get '/api/v1/builds/:build_id' do |build_id|
@@ -145,17 +145,17 @@ module Emerald
 
       get '/api/v1/builds/:build_id/jobs' do |build_id|
         authenticate!
-        Build.find(build_id).jobs.as_json.to_json
+        Build.find(build_id).jobs.map(&:serialize_json).to_json
       end
 
       get '/api/v1/jobs/:job_id' do |job_id|
         authenticate!
-        Job.find(job_id).as_json.to_json
+        Job.find(job_id).serialize_json.to_json
       end
 
       get '/api/v1/jobs/:job_id/log' do |job_id|
         authenticate!
-        Job.find(job_id).logs.map(&:html_log_line).as_json.to_json
+        Job.find(job_id).logs.map(&:html_log_line).to_json
       end
     end
   end

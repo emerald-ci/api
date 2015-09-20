@@ -29,11 +29,15 @@ class Job < ActiveRecord::Base
     self.build.project.id
   end
 
+  def serialize_json
+    as_json(methods: [:build_id, :project_id])
+  end
+
   after_create do
     EventEmitter.emit({
       event_type: :new,
       type: :job,
-      data: self.as_json(methods: [:build_id, :project_id])
+      data: serialize_json
     }.to_json)
   end
 
@@ -41,7 +45,7 @@ class Job < ActiveRecord::Base
     EventEmitter.emit({
       event_type: :update,
       type: :job,
-      data: self.as_json(methods: [:build_id, :project_id])
+      data: serialize_json
     }.to_json)
   end
 end
