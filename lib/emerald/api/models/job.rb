@@ -10,6 +10,8 @@ class Job < ActiveRecord::Base
 
   validates :state, presence: true
 
+  default_scope { order('started_at DESC') }
+
   def log_stream(&block)
     conn = Bunny.new ENV['RABBITMQ_URL']
     conn.start

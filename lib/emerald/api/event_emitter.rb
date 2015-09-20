@@ -4,9 +4,6 @@ module EventEmitter
   extend self
 
   def emit(payload)
-    puts '----------'
-    puts payload
-    puts '----------'
     x.publish(payload, :routing_key => "events")
   end
 

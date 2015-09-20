@@ -5,6 +5,8 @@ class Build < ActiveRecord::Base
   validates :short_description, presence: true
   validates :description, presence: true
 
+  default_scope { order('created_at DESC') }
+
   before_validation(on: :create) do
     self.short_description = self.description.split("\n").first[0..68]
   end
