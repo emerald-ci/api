@@ -97,6 +97,17 @@ module Emerald
         authenticate!
         repo = github_user.api.repo(id.to_i)
         project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.clone_url)
+        github_user.api.create_hook(
+          repo.full_name,
+          'web',{
+            :url => "http://#{request.env['HTTP_HOST']}/api/v1/projects/#{project.id}/builds/trigger/github",
+            :content_type => 'json'
+          },
+          {
+            :events => ['push'], # possibility for pull requests add 'pull_request'
+            :active => true
+          }
+        )
         project.serialize_json.to_json
       end
 
