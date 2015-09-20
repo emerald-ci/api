@@ -17,6 +17,7 @@ case $1 in
     bundle exec rake db:seed
     ;;
   test)
+    bundle exec rake db:migrate
     bundle exec rake
     ;;
   bash)
