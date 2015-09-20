@@ -6,6 +6,7 @@ require 'rack/cors'
 require 'emerald/api/middlewares/log_stream'
 require 'emerald/api/middlewares/event_stream'
 require 'emerald/api/models/github_project'
+require 'emerald/api/models/github_repo'
 require 'emerald/api/models/plain_project'
 require 'emerald/api/models/build'
 require 'emerald/api/workers/job_worker'
@@ -74,12 +75,21 @@ module Emerald
 
       get '/api/v1/github/repos' do
         authenticate!
+        GithubRepo.where(github_user_id: github_user.id).map(&:serialize_json).to_json
+      end
+
+      post '/api/v1/github/repos/sync' do
+        authenticate!
         repos = github_user.api.repositories(github_user.login)
         github_user.api.organizations.each do |org|
           repos += github_user.api.organization_repositories(org.login)
         end
         repos.map do |repo|
-          { id: repo.id, full_name: repo.full_name }
+          GithubRepo.create(
+            full_name: repo.full_name,
+            github_repo_id: repo.id,
+            github_user_id: github_user.id
+          ).serialize_json
         end.to_json
       end
 
