@@ -10,5 +10,9 @@ class Project < ActiveRecord::Base
     return nil if latest_build.nil?
     latest_build.latest_job_result
   end
+
+  def serialize_json
+    self.as_json(only: [:id, :name, :type, :git_url], methods: :latest_build_result)
+  end
 end
 

@@ -14,5 +14,21 @@ class Build < ActiveRecord::Base
     return nil if latest_job.nil?
     latest_job.state
   end
+
+  def project_id
+    self.project.id
+  end
+
+  def serialize_json
+    self.as_json(methods: [:latest_job_result, :project_id])
+  end
+
+  after_create do
+    EventEmitter.emit({
+      event_type: :new,
+      type: :build,
+      data: self.serialize_json
+    }.to_json)
+  end
 end
 

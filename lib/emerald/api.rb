@@ -4,6 +4,7 @@ require 'sinatra/activerecord'
 require 'rack/cors'
 
 require 'emerald/api/middlewares/log_stream'
+require 'emerald/api/middlewares/event_stream'
 require 'emerald/api/models/github_project'
 require 'emerald/api/models/plain_project'
 require 'emerald/api/models/build'
@@ -28,6 +29,7 @@ module Emerald
       register Sinatra::ActiveRecordExtension
       register Sinatra::Auth::Github
       use LogStream
+      use EventStream
 
       helpers do
         def request_body
@@ -40,14 +42,6 @@ module Emerald
           content = request_body
           content ||= '{}'
           JSON.parse content, symbolize_names: true
-        end
-
-        def serialize_project(project)
-          project.as_json(only: [:id, :name, :type, :git_url], methods: :latest_build_result)
-        end
-
-        def serialize_build(build)
-          build.as_json(methods: :latest_job_result)
         end
       end
 
@@ -93,23 +87,23 @@ module Emerald
         authenticate!
         repo = github_user.api.repo(id.to_i)
         project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.clone_url)
-        serialize_project(project).to_json
+        project.serialize_json.to_json
       end
 
       post '/api/v1/projects' do
         authenticate!
         project = PlainProject.create!(name: request_json[:name], git_url: request_json[:git_url])
-        serialize_project(project).to_json
+        project.serialize_json.to_json
       end
 
       get '/api/v1/projects' do
         authenticate!
-        Project.all.map{ |p| serialize_project(p) }.to_json
+        Project.all.map(&:serialize_json).to_json
       end
 
       get '/api/v1/projects/:project_id' do |project_id|
         authenticate!
-        serialize_project(Project.find(project_id)).to_json
+        Project.find(project_id).serialize_json.to_json
       end
 
       delete '/api/v1/project/:project_id' do |project_id|
@@ -120,7 +114,7 @@ module Emerald
 
       get '/api/v1/projects/:project_id/builds' do |project_id|
         authenticate!
-        Project.find(project_id).builds.map{|b|serialize_build(b)}.to_json
+        Project.find(project_id).builds.map(&:serialize_json).to_json
       end
 
       post '/api/v1/projects/:project_id/builds/trigger/manual' do |project_id|
@@ -146,7 +140,7 @@ module Emerald
 
       get '/api/v1/builds/:build_id' do |build_id|
         authenticate!
-        serialize_build(Build.find(build_id)).to_json
+        Build.find(build_id).serialize_json.to_json
       end
 
       get '/api/v1/builds/:build_id/jobs' do |build_id|
