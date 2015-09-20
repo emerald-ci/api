@@ -16,5 +16,11 @@ case $1 in
   seed)
     bundle exec rake db:seed
     ;;
+  test)
+    bundle exec rake
+    ;;
+  bash)
+    /bin/bash
+    ;;
 esac
 

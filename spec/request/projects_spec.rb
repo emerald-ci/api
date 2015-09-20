@@ -15,6 +15,7 @@ RSpec.describe do
           id: project.id,
           name: 'test',
           type: 'PlainProject',
+          latest_build: nil,
           git_url: 'https://github.com/emerald-ci/ruby-example'
         }
       ])
@@ -37,6 +38,7 @@ RSpec.describe do
         id: project.id,
         name: 'test',
         type: 'PlainProject',
+        latest_build: nil,
         git_url: 'https://github.com/emerald-ci/ruby-example'
       })
     end
@@ -53,6 +55,7 @@ RSpec.describe do
           id: project.id,
           name: 'test',
           type: 'PlainProject',
+          latest_build: nil,
           git_url: 'https://github.com/emerald-ci/ruby-example'
         })
       end

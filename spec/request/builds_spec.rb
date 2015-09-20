@@ -24,6 +24,7 @@ RSpec.describe do
       expect(json_response).to eq ({
         id: job.id,
         build_id: job.build.id,
+        project_id: job.build.project.id,
         state: 'not_running',
         started_at: nil,
         finished_at: nil
