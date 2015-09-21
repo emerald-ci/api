@@ -34,6 +34,7 @@ class JobWorker
   end
 
   def create_container(job)
+    Docker::Image.create('fromImage' => 'emeraldci/environment') if !Docker::Image.exist?('emeraldci/environment')
     Docker::Container.create(
       'Cmd' => [job.build.project.git_url, job.build.commit],
       'Image' => 'emeraldci/environment',
