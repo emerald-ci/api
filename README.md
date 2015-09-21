@@ -10,3 +10,8 @@ logs produced by the build are sent to a
 [fluentd](https://github.com/emerald-ci/fluentd) instance which in turn
 redirects the logs into a rabbitmq which is exposed by the API through the logs
 endpoint and can be streamed using Websockets.
+
+Issues
+------
+
+Please report issues to the meta repo [here](https://github.com/emerald-ci/Emerald-CI/issues).
