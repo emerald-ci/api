@@ -44,15 +44,22 @@ module Emerald
           content ||= '{}'
           JSON.parse content, symbolize_names: true
         end
+
+        def auth!
+          if ENV['GITHUB_ORG'].nil?
+            authenticate!
+          else
+            github_organization_authenticate! ENV['GITHUB_ORG']
+          end
+        end
       end
 
       get '/api/v1/auth/active' do
-        authenticate!
+        auth!
         { authenticated: authenticated? }.to_json
       end
 
       get '/api/v1/auth/github/callback' do
-        puts params["error"]
         if params["error"]
           redirect "/unauthenticated"
         else
@@ -64,22 +71,22 @@ module Emerald
       end
 
       get '/api/v1/auth/github/after' do
-        authenticate!
+        auth!
         redirect ENV['FRONTEND_URL']
       end
 
       get '/api/v1/profile' do
-        authenticate!
+        auth!
         github_user.to_h[:attribs].to_json
       end
 
       get '/api/v1/github/repos' do
-        authenticate!
+        auth!
         GithubRepo.where(github_user_id: github_user.id).map(&:serialize_json).to_json
       end
 
       post '/api/v1/github/repos/sync' do
-        authenticate!
+        auth!
         repos = github_user.api.repositories(github_user.login)
         github_user.api.organizations.each do |org|
           repos += github_user.api.organization_repositories(org.login)
@@ -94,7 +101,7 @@ module Emerald
       end
 
       post '/api/v1/github/repos/:id' do |id|
-        authenticate!
+        auth!
         repo = github_user.api.repo(id.to_i)
         project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.clone_url)
         github_user.api.create_hook(
@@ -112,34 +119,34 @@ module Emerald
       end
 
       post '/api/v1/projects' do
-        authenticate!
+        auth!
         project = PlainProject.create!(name: request_json[:name], git_url: request_json[:git_url])
         project.serialize_json.to_json
       end
 
       get '/api/v1/projects' do
-        authenticate!
+        auth!
         Project.all.map(&:serialize_json).to_json
       end
 
       get '/api/v1/projects/:project_id' do |project_id|
-        authenticate!
+        auth!
         Project.find(project_id).serialize_json.to_json
       end
 
       delete '/api/v1/project/:project_id' do |project_id|
-        authenticate!
+        auth!
         Project.find(project_id).delete!
         status 204
       end
 
       get '/api/v1/projects/:project_id/builds' do |project_id|
-        authenticate!
+        auth!
         Project.find(project_id).builds.map(&:serialize_json).to_json
       end
 
       post '/api/v1/projects/:project_id/builds/trigger/manual' do |project_id|
-        authenticate!
+        auth!
         project = GithubProject.find(project_id)
         commit = github_user.api.commits(project.name, 'master').first.commit
         build = project.builds.create!(commit: 'master', description: commit[:message])
@@ -160,22 +167,22 @@ module Emerald
       end
 
       get '/api/v1/builds/:build_id' do |build_id|
-        authenticate!
+        auth!
         Build.find(build_id).serialize_json.to_json
       end
 
       get '/api/v1/builds/:build_id/jobs' do |build_id|
-        authenticate!
+        auth!
         Build.find(build_id).jobs.map(&:serialize_json).to_json
       end
 
       get '/api/v1/jobs/:job_id' do |job_id|
-        authenticate!
+        auth!
         Job.find(job_id).serialize_json.to_json
       end
 
       get '/api/v1/jobs/:job_id/log' do |job_id|
-        authenticate!
+        auth!
         Job.find(job_id).logs.map(&:html_log_line).to_json
       end
     end
