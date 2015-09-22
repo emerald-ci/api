@@ -1,22 +1,26 @@
 #!/bin/bash
 set -e
 
-sleep 5
 case $1 in
   api)
+    ./script/wait_for_dependencies.sh
     bundle exec rake db:migrate
     bundle exec puma -b tcp://0.0.0.0:5000
     ;;
   worker)
+    ./script/wait_for_dependencies.sh
     bundle exec sidekiq -r ./lib/emerald/api/workers/job_worker.rb
     ;;
   migrate)
+    ./script/wait_for_dependencies.sh
     bundle exec rake db:migrate
     ;;
   seed)
+    ./script/wait_for_dependencies.sh
     bundle exec rake db:seed
     ;;
   test)
+    ./script/wait_for_dependencies.sh
     bundle exec rake db:migrate
     bundle exec rake
     ;;
