@@ -1,7 +1,7 @@
-FROM ruby:2.2.3
+FROM alpine
 
-RUN apt-get update -qq
-RUN apt-get install -y build-essential libpq-dev postgresql-client-9.4 postgresql-client-common
+RUN apk --update add bash build-base postgresql-client postgresql-dev ruby ruby-dev ruby-json ruby-irb ruby-bundler ruby-rdoc ruby-doc ruby-bigdecimal ruby-io-console && \
+    rm -rf /var/cache/apk/*
 
 # throw errors if Gemfile has been modified since Gemfile.lock
 RUN bundle config --global frozen 1
@@ -16,5 +16,6 @@ RUN bundle install --without development test
 COPY . /usr/src/app
 
 EXPOSE 5000
+ENV RACK_ENV=production
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
