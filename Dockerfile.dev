@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk --update add bash build-base postgresql-client postgresql-dev ruby ruby-dev ruby-json ruby-irb ruby-bundler ruby-rdoc ruby-doc ruby-bigdecimal ruby-io-console && \
+RUN apk --update add bash build-base postgresql-client postgresql-dev ca-certificates ruby ruby-dev ruby-json ruby-irb ruby-bundler ruby-rdoc ruby-doc ruby-bigdecimal ruby-io-console && \
     rm -rf /var/cache/apk/*
 
 # throw errors if Gemfile has been modified since Gemfile.lock
