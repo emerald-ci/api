@@ -6,7 +6,7 @@ require 'bunny'
 class Job < ActiveRecord::Base
   has_many :logs
   belongs_to :build
-  enum state: [ :not_running, :running, :passed, :failed ]
+  enum state: [ :not_running, :running, :passed, :failed, :error ]
 
   validates :state, presence: true
 

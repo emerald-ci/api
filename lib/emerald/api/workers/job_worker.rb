@@ -2,55 +2,66 @@ require_relative '../../../../config/environment'
 require 'emerald/api'
 
 require 'sidekiq'
-require 'docker'
 require 'emerald/api/models/job'
+require 'emerald/api/workers/container_factory'
 
 class JobWorker
   include Sidekiq::Worker
 
   def perform(job_id)
-    job = Job.find(job_id)
+    @job = Job.find(job_id)
 
     # this is async
-    job.log_stream do |delivery_info, properties, payload|
+    @job.log_stream do |delivery_info, properties, payload|
       payload = JSON.parse(payload)
       log_line = payload['payload']['log'].strip
-      job.logs.create(content: log_line) if !log_line.empty?
+      @job.logs.create(content: log_line) if !log_line.empty?
     end
 
-    container = create_container(job)
-    job.update!(
+    f = ContainerFactory.new(@job, ENV['FLUENTD_URL'])
+    volume_container, git_container, test_runner_container = f.create_containers
+
+    start
+    status_code = run_container(git_container)
+    if status_code != 0
+      stop(:error)
+      return
+    end
+
+    status_code = run_container(test_runner_container)
+    job_state = { 0 => :passed }.fetch(status_code, :failed)
+    stop(job_state)
+  rescue => e
+    puts e
+    puts e.backtrace
+    stop(:error)
+  ensure
+    remove_containers(volume_container, git_container, test_runner_container)
+  end
+
+  private
+
+  def start
+    @job.update!(
       state: :running,
       started_at: Time.now
     )
-    container.start
-    result = container.wait(3600) # allow jobs to take up to one hour
-    statusCode = result['StatusCode']
-    jobState = { 0 => :passed }.fetch(statusCode, :failed)
-    job.update!(
-      state: jobState,
+  end
+
+  def stop(job_state)
+    @job.update!(
+      state: job_state,
       finished_at: Time.now
     )
   end
 
-  def create_container(job)
-    Docker::Image.create('fromImage' => 'emeraldci/environment') if !Docker::Image.exist?('emeraldci/environment')
-    Docker::Container.create(
-      'Cmd' => [job.build.project.git_url, job.build.commit],
-      'Image' => 'emeraldci/environment',
-      'Tty' => true,
-      'OpenStdin' => true,
-      'HostConfig' => {
-        'Privileged' => true,
-        'Binds' => ['/var/run/docker.sock:/var/run/docker.sock'],
-        'LogConfig' => {
-          'Type' => 'fluentd',
-          'Config' => {
-            'fluentd-address' => ENV['FLUENTD_URL'],
-            'fluentd-tag' => "job.#{job.id}"
-          }
-        }
-      }
-    )
+  def remove_containers(*containers)
+    containers.each { |c| c.delete(force: true) }
+  end
+
+  def run_container(container)
+    container.start
+    result = container.wait(3600) # allow container to run up to one hour
+    result['StatusCode']
   end
 end
