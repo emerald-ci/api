@@ -36,7 +36,9 @@ class ContainerFactory
   end
 
   def create_test_runner_container
-    create_container('emeraldci/test-runner')
+    create_container('emeraldci/test-runner', {
+      'Cmd' => ["-project=job#{@job.id}"]
+    })
   end
 
   def create_container(image, override_config = {})
