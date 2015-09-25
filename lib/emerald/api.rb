@@ -91,6 +91,7 @@ module Emerald
         github_user.api.organizations.each do |org|
           repos += github_user.api.organization_repositories(org.login)
         end
+        GithubRepo.where(github_user_id: github_user.id).destroy_all
         repos.map do |repo|
           GithubRepo.create(
             full_name: repo.full_name,
