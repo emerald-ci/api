@@ -104,25 +104,23 @@ module Emerald
         auth!
         repo = github_user.api.repo(id.to_i)
         project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.clone_url)
-        begin
-          github_user.api.create_hook(
-            repo.full_name,
-            'web',{
-              :url => "http://#{request.env['HTTP_HOST']}/api/v1/projects/#{project.id}/builds/trigger/github",
-              :content_type => 'json'
-            },
-            {
-              :events => ['push'], # possibility for pull requests add 'pull_request'
-              :active => true
-            }
-          )
-        rescue Octokit::UnprocessableEntity => e
-          if e.errors == [{:resource=>"Hook", :code=>"custom", :message=>"Hook already exists on this repository"}]
-            puts "Webhook already exists for #{repo.full_name}"
-          else
-            raise e
+        #remove earlier hooks
+        github_user.api.hooks(repo.full_name).each do |hook|
+          if !hook.config.url.nil? && hook.config.url.include?(request.env['HTTP_HOST'])
+            github_user.api.remove_hook(repo.full_name, hook.id)
           end
         end
+        github_user.api.create_hook(
+          repo.full_name,
+          'web',{
+            :url => "http://#{request.env['HTTP_HOST']}/api/v1/projects/#{project.id}/builds/trigger/github",
+            :content_type => 'json'
+          },
+          {
+            :events => ['push'], # possibility for pull requests add 'pull_request'
+            :active => true
+          }
+        )
         project.serialize_json.to_json
       end
 
