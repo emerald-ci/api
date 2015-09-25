@@ -24,6 +24,9 @@ class JobWorker
     start
     status_code = run_container(git_container)
     if status_code != 0
+      @job.logs.create(
+        content: "Job errored because git checkout has been unsuccessful (error code: #{status_code})"
+      )
       stop(:error)
       return
     end
@@ -34,6 +37,9 @@ class JobWorker
   rescue => e
     puts e
     puts e.backtrace
+    @job.logs.create(
+      content: "Job errored unexpectedly."
+    )
     stop(:error)
   ensure
     remove_containers(volume_container, git_container, test_runner_container)
