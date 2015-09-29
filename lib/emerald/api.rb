@@ -13,12 +13,31 @@ require 'emerald/api/workers/job_worker'
 
 module Emerald
   module API
+    class APIError < StandardError
+      attr_reader :status_code
+
+      def initialize(status_code, *messages)
+        @status_code = status_code
+        @messages = messages
+      end
+
+      def to_json
+        { errors: @messages }.to_json
+      end
+    end
+
+    class UnprocessableEntity < APIError
+      def initialize(*messages)
+        super(422, *messages)
+      end
+    end
+
     class App < Sinatra::Base
       set :database, ENV['DATABASE_URL']
       set :database_extras, { pool: 5, timeout: 3000, encoding: 'unicode' }
       set :session_secret, ENV['SESSION_SECRET']
       enable :sessions
-      enable :method_override
+      disable :raise_errors, :show_exceptions, :dump_errors, :logging
 
       set :github_options, {
         :scopes    => "user, repo, write:repo_hook",
@@ -52,6 +71,10 @@ module Emerald
             github_organization_authenticate! ENV['GITHUB_ORG']
           end
         end
+      end
+
+      error APIError do
+        halt env['sinatra.error'].status_code, env['sinatra.error'].to_json
       end
 
       get '/api/v1/auth/active' do
@@ -104,13 +127,17 @@ module Emerald
       post '/api/v1/github/repos/:id' do |id|
         auth!
         repo = github_user.api.repo(id.to_i)
-        project = GithubProject.create!(github_repo_id: id, name: repo.full_name, git_url: repo.clone_url)
-        #remove earlier hooks
+        if GithubProject.exists?(github_repo_id: repo.id)
+          fail UnprocessableEntity, 'Github repo has already been added'
+        end
+        project = GithubProject.create!(github_repo_id: repo.id, name: repo.full_name, git_url: repo.clone_url)
+        #cleanup earlier hooks
         github_user.api.hooks(repo.full_name).each do |hook|
           if !hook.config.url.nil? && hook.config.url.include?(request.env['HTTP_HOST'])
             github_user.api.remove_hook(repo.full_name, hook.id)
           end
         end
+        #add new hook
         github_user.api.create_hook(
           repo.full_name,
           'web',{
