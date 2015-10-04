@@ -10,6 +10,7 @@ require 'emerald/api/models/github_repo'
 require 'emerald/api/models/plain_project'
 require 'emerald/api/models/build'
 require 'emerald/api/workers/job_worker'
+require 'emerald/api/workers/github_sync_worker'
 
 module Emerald
   module API
@@ -108,20 +109,17 @@ module Emerald
         GithubRepo.where(github_user_id: github_user.id).map(&:serialize_json).to_json
       end
 
+      get '/api/v1/github/repos/sync/status' do
+        auth!
+        {
+          sync_in_progress: GithubSyncWorker.mutex_for_github_user(github_user.id).locked?
+        }.to_json
+      end
+
       post '/api/v1/github/repos/sync' do
         auth!
-        repos = github_user.api.repositories(github_user.login)
-        github_user.api.organizations.each do |org|
-          repos += github_user.api.organization_repositories(org.login)
-        end
-        GithubRepo.where(github_user_id: github_user.id).destroy_all
-        repos.map do |repo|
-          GithubRepo.create(
-            full_name: repo.full_name,
-            github_repo_id: repo.id,
-            github_user_id: github_user.id
-          ).serialize_json
-        end.to_json
+        GithubSyncWorker.perform_async(github_user.id, github_user.api.access_token)
+        status 204
       end
 
       post '/api/v1/github/repos/:id' do |id|

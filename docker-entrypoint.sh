@@ -9,7 +9,7 @@ case $1 in
     ;;
   worker)
     ./script/wait_for_dependencies.sh
-    bundle exec sidekiq -r ./lib/emerald/api/workers/job_worker.rb
+    bundle exec sidekiq -r ./config/worker_environment.rb
     ;;
   migrate)
     ./script/wait_for_dependencies.sh

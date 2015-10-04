@@ -115,6 +115,10 @@ GEM
     rainbow (2.0.0)
     rake (10.4.2)
     redis (3.2.1)
+    redis-classy (2.2.0)
+      redis-namespace (~> 1.0)
+    redis-mutex (4.0.0)
+      redis-classy (~> 2.0)
     redis-namespace (1.5.2)
       redis (~> 3.0, >= 3.0.4)
     rspec (3.3.0)
@@ -204,6 +208,7 @@ DEPENDENCIES
   rack-flash3
   rack-test
   rake
+  redis-mutex
   rspec
   rubocop
   sidekiq

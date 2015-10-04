@@ -19,6 +19,7 @@ gem 'activerecord'
 gem 'pg'
 gem 'sidekiq'
 gem 'docker-api'
+gem 'redis-mutex'
 
 group :test do
   gem 'rspec'

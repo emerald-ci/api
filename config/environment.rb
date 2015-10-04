@@ -3,10 +3,12 @@ ENV['GITHUB_VERIFIER_SECRET'] = ENV['SESSION_SECRET']
 ENV['WARDEN_GITHUB_VERIFIER_SECRET'] = ENV['SESSION_SECRET']
 require 'sidekiq'
 require 'emerald/api/event_emitter'
+require 'redis-mutex'
 Sidekiq.configure_server do |config|
   config.redis = { :namespace => 'emeraldci' }
 end
 Sidekiq.configure_client do |config|
   config.redis = { :namespace => 'emeraldci', :size => 1 }
 end
+RedisClassy.redis = Redis.new(url: ENV['REDIS_URL'])
 

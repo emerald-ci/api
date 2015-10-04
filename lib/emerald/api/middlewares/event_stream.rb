@@ -12,14 +12,19 @@ module Emerald
 
       def initialize(app)
         @app = app
-        @clients = []
+        @clients = {}
         conn = Bunny.new ENV['RABBITMQ_URL']
         conn.start
         ch = conn.create_channel
         x = ch.direct('events', durable: true)
         q = ch.queue('', auto_delete: true).bind(x, routing_key: "events")
         q.subscribe do |delivery_info, properties, payload|
-          @clients.each { |ws| ws.send(payload) }
+          json = JSON.parse(payload)
+          @clients.each do |client_id, ws|
+            if !json.key?(:user) || (json.key?(:user) && json[:user] == user_id)
+              ws.send(payload)
+            end
+          end
         end
       end
 
@@ -28,7 +33,8 @@ module Emerald
           ws = Faye::WebSocket.new(env, nil, { ping: KEEPALIVE_TIME })
 
           ws.on :open do |event|
-            @clients << ws
+            user = env['warden'].user
+            @clients[user.id] = ws
           end
 
           ws.on :close do |event|

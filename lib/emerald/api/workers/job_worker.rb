@@ -1,6 +1,3 @@
-require_relative '../../../../config/environment'
-require 'emerald/api'
-
 require 'sidekiq'
 require 'emerald/api/models/job'
 require 'emerald/api/workers/container_factory'
