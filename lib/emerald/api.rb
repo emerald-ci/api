@@ -213,9 +213,14 @@ module Emerald
         Job.find(job_id).serialize_json.to_json
       end
 
-      get '/api/v1/jobs/:job_id/log' do |job_id|
+      get '/api/v1/jobs/:job_id/log.?:format?' do |job_id, format|
         auth!
-        Job.find(job_id).logs.map(&:html_log_line).to_json
+        if format == 'raw'
+          content_type 'text/plain', charset: 'utf-8'
+          Job.find(job_id).logs.map(&:content).join("\n")
+        else
+          Job.find(job_id).logs.map(&:html_log_line).to_json
+        end
       end
     end
   end
