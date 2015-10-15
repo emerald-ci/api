@@ -1,3 +1,4 @@
+require 'yaml'
 require 'sidekiq'
 require 'emerald/api/models/job'
 require 'emerald/api/workers/container_factory'
@@ -16,20 +17,46 @@ class JobWorker
     end
 
     f = ContainerFactory.new(@job, ENV['FLUENTD_URL'])
-    volume_container, git_container, test_runner_container = f.create_containers
+    containers = []
+    volume_container, git_container, config_container, test_runner_container = f.create_containers
+    containers = [volume_container, git_container, config_container, test_runner_container]
 
     start
     status_code = run_container(git_container)
     if status_code != 0
       @job.logs.create(
-        content: "Job errored because git checkout has been unsuccessful (error code: #{status_code})"
+        content: "Build errored because git checkout has been unsuccessful (error code: #{status_code})"
       )
       stop(:error)
       return
     end
 
+    config_container.start
+    config_container.wait
+    config = config_container.logs(stdout: true)
+    config = YAML.load(config)
+
     status_code = run_container(test_runner_container)
     job_state = { 0 => :passed }.fetch(status_code, :failed)
+
+    plugin_configs = config.delete("plugins")
+    plugin_containers = f.create_plugin_containers(plugin_configs)
+    containers += plugin_containers
+    plugin_containers.each_with_index do |container, index|
+      run_container(
+        container,
+        {
+          job: {
+            state: job_state
+          },
+          config: plugin_configs[index]
+        }.to_json
+      )
+    end
+
+    @job.logs.create(
+      content: "Build #{job_state}"
+    )
     stop(job_state)
   rescue => e
     puts e
@@ -39,7 +66,7 @@ class JobWorker
     )
     stop(:error)
   ensure
-    remove_containers(volume_container, git_container, test_runner_container)
+    remove_containers(containers)
   end
 
   private
@@ -58,12 +85,13 @@ class JobWorker
     )
   end
 
-  def remove_containers(*containers)
+  def remove_containers(containers)
     containers.each { |c| c.delete(force: true) }
   end
 
-  def run_container(container)
+  def run_container(container, stdin = nil)
     container.start
+    container.attach(stdin: StringIO.new(stdin.to_s)) if !stdin.nil?
     result = container.wait(3600) # allow container to run up to one hour
     result['StatusCode']
   end
