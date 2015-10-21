@@ -166,9 +166,9 @@ module Emerald
         Project.find(project_id).serialize_json.to_json
       end
 
-      delete '/api/v1/project/:project_id' do |project_id|
+      delete '/api/v1/projects/:project_id' do |project_id|
         auth!
-        Project.find(project_id).delete!
+        Project.find(project_id).delete
         status 204
       end
 
@@ -179,7 +179,7 @@ module Emerald
 
       post '/api/v1/projects/:project_id/builds/trigger/manual' do |project_id|
         auth!
-        project = GithubProject.find(project_id)
+        project = Project.find(project_id)
         commit = github_user.api.commits(project.name, 'master').first.commit
         build = project.builds.create!(commit: 'master', description: commit[:message])
         job = build.jobs.create!(state: :not_running)
