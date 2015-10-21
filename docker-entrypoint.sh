@@ -19,10 +19,10 @@ case $1 in
     ./script/wait_for_dependencies.sh
     bundle exec rake db:seed
     ;;
-  test)
+  rspec)
     ./script/wait_for_dependencies.sh
     bundle exec rake db:migrate
-    bundle exec rake
+    bundle exec rspec ${@:2} # allow handing arguments
     ;;
   bash)
     /bin/bash
