@@ -18,6 +18,7 @@ gem 'pg'
 gem 'sidekiq'
 gem 'docker-api'
 gem 'redis-mutex'
+gem 'pry'
 
 group :test do
   gem 'rspec'

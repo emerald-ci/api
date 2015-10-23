@@ -41,6 +41,7 @@ require 'rack/test'
 require 'json'
 require 'factory_girl'
 require 'sidekiq/testing'
+require 'pry'
 Sidekiq::Testing.fake!
 
 Dir[File.join(File.expand_path('../', __FILE__), 'support/*.rb')].each { |f| require f }

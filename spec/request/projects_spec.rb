@@ -1,4 +1,4 @@
-RSpec.describe do
+RSpec.describe Emerald::API do
   before do
     @user = make_user("login" => "flower-pot")
     login_as @user
