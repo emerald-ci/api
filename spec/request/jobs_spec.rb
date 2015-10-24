@@ -26,14 +26,15 @@ RSpec.describe Emerald::API do
   end
 
   describe "[GET] /jobs/:id/log" do
-    let!(:log1) { FactoryGirl.create(:log, job: job) }
-    let!(:log2) { FactoryGirl.create(:log, job: job) }
-
     context "when requesting plaintext log" do
       it "returns log as plain text" do
         get "/api/v1/jobs/#{job.id}/log.raw"
 
-        expect(last_response.body).to eq "log line content\nlog line content"
+        expect(last_response.body).to eq <<-LOG.strip_heredoc.chomp
+          not colored
+          \e[33mcolored\e[0m
+          not colored
+        LOG
       end
     end
 
@@ -41,10 +42,11 @@ RSpec.describe Emerald::API do
       it "returns log as an array of lines with ansi colors converted to html" do
         get "/api/v1/jobs/#{job.id}/log"
 
-        expect(json_response).to eq([
-          "log line content\n",
-          "log line content\n"
-        ])
+        expect(last_response.body).to eq <<-LOG.strip_heredoc.chomp
+          not colored
+          <span class="yellow">colored</span>
+          not colored
+        LOG
       end
     end
   end

@@ -5,6 +5,7 @@ class CreateJobs < ActiveRecord::Migration
       t.integer :state, default: 0
       t.datetime :started_at
       t.datetime :finished_at
+      t.text :log
     end
   end
 end

@@ -13,7 +13,7 @@ class JobWorker
     @job.log_stream do |delivery_info, properties, payload|
       payload = JSON.parse(payload)
       log_line = payload['payload']['log'].strip
-      @job.logs.create(content: log_line) if !log_line.empty?
+      @job.add_to_log(log_line) if !log_line.empty?
     end
 
     f = ContainerFactory.new(@job, ENV['FLUENTD_URL'])
@@ -24,8 +24,8 @@ class JobWorker
     start
     status_code = run_container(git_container)
     if status_code != 0
-      @job.logs.create(
-        content: "Build errored because git checkout has been unsuccessful (error code: #{status_code})"
+      @job.add_to_log(
+        "Build errored because git checkout has been unsuccessful (error code: #{status_code})"
       )
       stop(:error)
       return
@@ -40,30 +40,28 @@ class JobWorker
     job_state = { 0 => :passed }.fetch(status_code, :failed)
 
     plugin_configs = config.delete("plugins")
-    plugin_containers = f.create_plugin_containers(plugin_configs)
-    containers += plugin_containers
-    plugin_containers.each_with_index do |container, index|
-      run_container(
-        container,
-        {
-          job: {
-            state: job_state
-          },
-          config: plugin_configs[index]
-        }.to_json
-      )
+    if !plugin_configs.nil?
+      plugin_containers = f.create_plugin_containers(plugin_configs)
+      containers += plugin_containers
+      plugin_containers.each_with_index do |container, index|
+        run_container(
+          container,
+          {
+            job: {
+              state: job_state
+            },
+            config: plugin_configs[index]
+          }.to_json
+        )
+      end
     end
 
-    @job.logs.create(
-      content: "Build #{job_state}"
-    )
+    @job.add_to_log("Build #{job_state}")
     stop(job_state)
   rescue => e
     puts e
     puts e.backtrace
-    @job.logs.create(
-      content: "Job errored unexpectedly."
-    )
+    @job.add_to_log("Job errored unexpectedly.")
     stop(:error)
   ensure
     remove_containers(containers)

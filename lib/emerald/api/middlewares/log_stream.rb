@@ -30,8 +30,7 @@ module Emerald
               payload = JSON.parse(payload)
               log_line = payload['payload']['log'].strip
               if !log_line.empty?
-                log = Log.new(content: log_line)
-                payload['payload']['log'] = log.html_log_line
+                payload['payload']['log'] = Job.s_to_html(log_line) + "\n"
                 ws.send(payload.to_json)
               end
             end

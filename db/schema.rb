@@ -36,11 +36,7 @@ ActiveRecord::Schema.define(version: 20150917115215) do
     t.integer  "state",       default: 0
     t.datetime "started_at"
     t.datetime "finished_at"
-  end
-
-  create_table "logs", force: :cascade do |t|
-    t.integer "job_id"
-    t.string  "content"
+    t.text     "log"
   end
 
   create_table "projects", force: :cascade do |t|

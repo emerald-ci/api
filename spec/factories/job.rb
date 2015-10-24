@@ -6,5 +6,10 @@ FactoryGirl.define do
     state :passed
     started_at { DateTime.new(2015, 1, 1, 0, 0, 0, 0) }
     finished_at { DateTime.new(2015, 1, 1, 0, 0, 0, 0) }
+    log <<-EOF.strip_heredoc.chomp
+      not colored
+      [33mcolored[0m
+      not colored
+    EOF
   end
 end

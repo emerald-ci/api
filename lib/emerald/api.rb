@@ -38,7 +38,7 @@ module Emerald
       set :database_extras, { pool: 5, timeout: 3000, encoding: 'unicode' }
       set :session_secret, ENV['SESSION_SECRET']
       enable :sessions
-      disable :raise_errors, :show_exceptions, :dump_errors, :logging
+      disable :show_exceptions, :logging
 
       set :github_options, {
         :scopes    => "user, repo, write:repo_hook",
@@ -217,9 +217,10 @@ module Emerald
         auth!
         if format == 'raw'
           content_type 'text/plain', charset: 'utf-8'
-          Job.find(job_id).logs.map(&:content).join("\n")
+          Job.find(job_id).log
         else
-          Job.find(job_id).logs.map(&:html_log_line).to_json
+          content_type 'text/html', charset: 'utf-8'
+          Job.find(job_id).html_log
         end
       end
     end
