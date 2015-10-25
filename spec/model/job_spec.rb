@@ -3,7 +3,7 @@ RSpec.describe Job do
 
   describe "#add_to_log" do
     it "appends to the existing log" do
-      job.add_to_log("test")
+      job.add_to_log("\ntest")
 
       expect(job.reload.log).to eq <<-LOG.strip_heredoc.chomp
         not colored
