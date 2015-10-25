@@ -101,10 +101,6 @@ class ContainerFactory
     }
   end
 
-  def volume_container_name
-    "job_#{@job.id}_volume_container"
-  end
-
   def ensure_image_exists(image_name)
     Docker::Image.create('fromImage' => image_name) if !Docker::Image.exist?(image_name)
   end

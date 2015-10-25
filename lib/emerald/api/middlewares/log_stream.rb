@@ -25,15 +25,8 @@ module Emerald
           job_id = route.scan(ROUTE_REGEX).first.first
 
           ws.on :open do |event|
-            q = @ch.queue('', auto_delete: true).bind(@x, routing_key: "job.#{job_id}")
-            q.subscribe do |delivery_info, properties, payload|
-              payload = JSON.parse(payload)
-              log_line = payload['payload']['log'].strip
-              if !log_line.empty?
-                payload['payload']['log'] = Job.s_to_html(log_line) + "\n"
-                ws.send(payload.to_json)
-              end
-            end
+            q = @ch.queue('', auto_delete: true).bind(@x, routing_key: job_id.to_s)
+            q.subscribe { |_, _, payload| ws.send(payload) }
           end
 
           ws.on :close do |event|

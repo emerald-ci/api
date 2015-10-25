@@ -19,6 +19,9 @@ case $1 in
     ./script/wait_for_dependencies.sh
     bundle exec rake db:seed
     ;;
+  console)
+    bundle exec irb
+    ;;
   rspec)
     ./script/wait_for_dependencies.sh
     bundle exec rake db:migrate

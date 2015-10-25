@@ -71,6 +71,10 @@ class Job < ActiveRecord::Base
     as_json(methods: [:build_id, :project_id], except: [:log])
   end
 
+  def volume_container_name
+    "job_#{self.id}_volume_container"
+  end
+
   after_create do
     EventEmitter.emit({
       event_type: :new,
