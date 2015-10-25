@@ -34,7 +34,7 @@ class Job < ActiveRecord::Base
   end
 
   def add_to_log(content)
-    self.log = "#{log}\n#{content}"
+    self.log = "#{log}#{content}"
     save
   end
 
